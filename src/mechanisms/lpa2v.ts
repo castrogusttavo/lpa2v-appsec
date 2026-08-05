@@ -1,0 +1,9 @@
+import type { Asset, RawSignal, ParaClass } from "../core/types.js";
+import { Lpa2vCluster, type Lpa2vClusterOptions } from "../cluster/lpa2vCluster.js";
+
+/** Fabrica um classificador LPA2v com estado (persistencia por ativo). */
+export function makeLpa2vMechanism(options: Lpa2vClusterOptions = {}) {
+  const cluster = new Lpa2vCluster(options);
+  return (assetId: string, signal: RawSignal, asset: Asset): ParaClass =>
+    cluster.classify(assetId, signal, asset);
+}
