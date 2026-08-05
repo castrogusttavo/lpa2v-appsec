@@ -1,0 +1,19 @@
+{
+  "name": "lpa2v-appsec",
+  "version": "0.1.0",
+  "description": "Simulador de um cluster hierarquico de neuronios paraconsistentes LPA2v aplicado a triagem de findings de AppSec (SAST/SCA/DAST), com foco em reducao de falsos positivos e correlacao contextual. Adaptacao do dominio de redes industriais para AppSec.",
+  "type": "module",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "sim": "tsx scripts/run-simulation.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
