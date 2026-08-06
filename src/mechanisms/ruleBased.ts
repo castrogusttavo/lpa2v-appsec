@@ -2,25 +2,25 @@ import type { RawSignal, ParaClass } from "../core/types.js";
 import { thresholdMechanism } from "./threshold.js";
 
 /**
- * Mecanismo Rule-Based: parte do mesmo veredito do Threshold e aplica um
- * pequeno conjunto de excecoes IF-THEN previstas de antemao — igual ao
- * artigo original, isso reduz parte do ruido mas so para os padroes que o
- * autor das regras ja conhecia. Contextos novos (ex.: endpoint protegido
- * por WAF, scanner instavel, modulo depreciado, rede interna) continuam
- * gerando alarme porque nao ha regra explicita para eles.
+ * Rule-Based mechanism: starts from the same verdict as Threshold and
+ * applies a small set of IF-THEN exceptions anticipated in advance — this
+ * cuts some of the noise, but only for the patterns the rule author already
+ * knew about. New contexts (e.g. a WAF-protected endpoint, a flaky scanner,
+ * a deprecated module, an internal-only network) still trigger an alarm
+ * because there's no explicit rule for them.
  */
 export function ruleBasedMechanism(signal: RawSignal): ParaClass {
   const base = thresholdMechanism(signal);
   if (base === "normal") return "normal";
 
-  // Regra 1: achado apenas em codigo de teste/fixture -> suprimir.
+  // Rule 1: finding only in test/fixture code -> suppress.
   if (signal.codeContext.inTestOrFixture) return "normal";
 
-  // Regra 2: janela de manutencao ou pentest autorizado -> suprimir.
+  // Rule 2: maintenance window or authorized pentest -> suppress.
   if (signal.opContext.maintenanceOrPentestWindow) return "normal";
 
-  // Regra 3: dependencia com patch disponivel e sem exploit conhecido ->
-  // rebaixar um nivel (menos urgente, mas ainda nao ignorado).
+  // Rule 3: dependency with a patch available and no known exploit ->
+  // downgrade one level (less urgent, but not ignored outright).
   if (
     !signal.sast.hit &&
     !signal.dast.hit &&

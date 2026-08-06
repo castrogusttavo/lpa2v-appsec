@@ -1,11 +1,10 @@
 import type { RawSignal, ParaClass } from "../core/types.js";
 
 /**
- * Mecanismo Threshold: qualquer sinal isolado de qualquer ferramenta gera
- * alerta, sem contexto e sem correlacao entre dominios — equivalente ao
- * "threshold" do artigo original (limite individual ultrapassado = alarme).
- * Nunca produz "inconsistente": nao ha como representar evidencia
- * contraditoria em um modelo de limiar unico.
+ * Threshold mechanism: any isolated signal from any tool fires an alert,
+ * with no context and no cross-domain correlation — a single limit crossed
+ * means an alarm. Never produces "inconsistente": there's no way to
+ * represent contradictory evidence in a single-threshold model.
  */
 export function thresholdMechanism(signal: RawSignal): ParaClass {
   if (signal.dast.hit && signal.dast.confirmed === true) return "critico";
