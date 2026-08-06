@@ -8,11 +8,9 @@ const RANK: Record<Exclude<ParaClass, "inconsistente">, number> = {
 };
 
 /**
- * Tick em que a evidencia bruta cruza, sem ambiguidade, o limite rigido que
- * o mecanismo Threshold usaria para classificar como critico. E o ponto de
- * referencia "objetivo" contra o qual medimos antecipacao/atraso —
- * equivalente ao momento em que o loop Ethernet do artigo se torna
- * inequivocamente critico.
+ * Tick at which the raw evidence unambiguously crosses the hard limit that
+ * the Threshold mechanism would use to classify as critical. This is the
+ * "objective" reference point against which we measure anticipation/lag.
  */
 export function findHardLimitTick(events: SimEvent[]): number | null {
   const hit = events
@@ -27,13 +25,13 @@ export function findHardLimitTick(events: SimEvent[]): number | null {
 }
 
 /**
- * Primeiro tick em que o mecanismo atinge PELO MENOS o rank informado
- * (padrao: degradacao). Nao usamos "qualquer alerta" como comparacao
- * porque o Threshold marca "atencao" a partir de um unico hit isolado, sem
- * nenhuma seletividade — comparar pelo primeiro alerta bruto favoreceria
- * artificialmente o mecanismo mais ruidoso. Comparar a partir de
- * "degradacao" exige que o sinal já tenha alguma substância em todos os
- * mecanismos, tornando a comparação de antecipação justa.
+ * First tick at which the mechanism reaches AT LEAST the given rank
+ * (default: degradacao). We don't use "any alert" as the comparison
+ * because Threshold flags "atencao" from a single isolated hit, with no
+ * selectivity at all — comparing by the first raw alert would artificially
+ * favor the noisier mechanism. Comparing from "degradacao" up requires the
+ * signal to already have some substance across every mechanism, making the
+ * anticipation comparison fair.
  */
 export function findFirstTickAtRank(
   events: ClassifiedEvent[],
@@ -48,7 +46,7 @@ export function findFirstTickAtRank(
 export interface LeadTimeResult {
   hardLimitTick: number | null;
   firstEscalatedTick: number | null;
-  /** Positivo = mecanismo antecipou o problema; negativo = detectou com atraso. */
+  /** Positive = the mechanism anticipated the problem; negative = it detected it late. */
   leadTicks: number | null;
 }
 

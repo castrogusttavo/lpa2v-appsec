@@ -15,10 +15,9 @@ export interface ConfusionMetrics {
 }
 
 /**
- * "Alerta" = classe diferente de normal e diferente de inconsistente.
- * Inconsistente e tratado como uma terceira gaveta (revisao humana), nao
- * como TP/FP — igual ao artigo original, que reporta "tratamento de
- * estados inconsistentes" como metrica separada de FP/FN.
+ * "Alert" = a class other than normal and other than inconsistente.
+ * Inconsistent is treated as a third bucket (human review), not as TP/FP —
+ * reported as a metric separate from FP/FN.
  */
 export function computeConfusion(events: ClassifiedEvent[]): ConfusionMetrics {
   let truePositives = 0;
