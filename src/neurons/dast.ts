@@ -1,10 +1,10 @@
 import type { DastSignal } from "../core/types.js";
 import { clamp01, type Evidence } from "../core/paraconsistent.js";
 
-/** Neuronio de dominio DAST (ex.: OWASP ZAP) — evidencia de exploracao em runtime. */
+/** DAST domain neuron (e.g. OWASP ZAP) — evidence from runtime exploitation. */
 export function dastNeuron(signal: DastSignal): Evidence {
   if (!signal.hit) {
-    // DAST so ve o que consegue alcancar e testar; silencio nao e prova forte.
+    // DAST only sees what it can reach and test; silence isn't strong proof.
     return { mu: 0.05, lambda: 0.15 };
   }
 
@@ -12,15 +12,15 @@ export function dastNeuron(signal: DastSignal): Evidence {
     return { mu: 0.9, lambda: 0.05 };
   }
   if (signal.confirmed === false) {
-    // Tentativa de exploracao ativa e deliberada que falhou (ex.: bloqueada
-    // por WAF) e evidencia desfavoravel forte, nao fraca — o ataque foi
-    // de fato tentado em runtime e nao vingou.
+    // A deliberate, active exploitation attempt that failed (e.g. blocked
+    // by a WAF) is strong unfavorable evidence, not weak — the attack was
+    // actually attempted at runtime and did not succeed.
     return { mu: 0.15, lambda: 0.7 };
   }
-  // confirmed === null: deteccao passiva (sem tentativa ativa de explorar) OU
-  // alvo inacessivel. Sem passiveSeverity, mantemos a incerteza pura
-  // original (mu=lambda=neutro) — comportamento inalterado para os
-  // cenarios sinteticos, nenhum dos quais define esse campo.
+  // confirmed === null: passive detection (no active exploitation attempt)
+  // OR unreachable target. Without passiveSeverity, we keep the original
+  // pure uncertainty (mu=lambda=neutral) — unchanged behavior for the
+  // synthetic scenarios, none of which set this field.
   if (!signal.passiveSeverity) {
     return { mu: 0.3, lambda: 0.3 };
   }

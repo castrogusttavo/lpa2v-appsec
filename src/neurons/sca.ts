@@ -1,12 +1,12 @@
 import type { ScaSignal } from "../core/types.js";
 import { clamp01, type Evidence } from "../core/paraconsistent.js";
 
-/** Neuronio de dominio SCA (ex.: Snyk) — evidencia de dependencia vulneravel. */
+/** SCA domain neuron (e.g. Snyk) — evidence from a vulnerable dependency. */
 export function scaNeuron(signal: ScaSignal): Evidence {
   if (!signal.hit) {
-    // SCA tem visibilidade quase completa sobre dependencias declaradas,
-    // entao a ausencia de match e evidencia relativamente mais confiavel
-    // de seguranca do que a ausencia de match de SAST/DAST.
+    // SCA has near-complete visibility into declared dependencies, so no
+    // match is relatively more reliable evidence of safety than no match
+    // from SAST/DAST.
     return { mu: 0.03, lambda: 0.2 };
   }
 

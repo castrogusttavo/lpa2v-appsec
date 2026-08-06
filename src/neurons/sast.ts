@@ -15,11 +15,11 @@ const CONFIDENCE_SCALE: Record<SastSignal["confidence"], number> = {
   high: 1.0,
 };
 
-/** Neuronio de dominio SAST (ex.: Semgrep) — evidencia de match estatico. */
+/** SAST domain neuron (e.g. Semgrep) — evidence from a static match. */
 export function sastNeuron(signal: SastSignal): Evidence {
   if (!signal.hit) {
-    // Ausencia de match nao e prova forte de seguranca: SAST tem
-    // visibilidade limitada (nao ve dependencias nem comportamento runtime).
+    // No match is not strong proof of safety: SAST has limited visibility
+    // (it doesn't see dependencies or runtime behavior).
     return { mu: 0.03, lambda: 0.15 };
   }
 
@@ -27,13 +27,13 @@ export function sastNeuron(signal: SastSignal): Evidence {
   let lambda = 0.05;
 
   if (signal.reachable === false) {
-    // Match estatico em codigo provavelmente morto/inatingivel em runtime.
+    // Static match in code that's likely dead/unreachable at runtime.
     mu *= 0.4;
     lambda += 0.45;
   } else if (signal.reachable === true) {
     mu += 0.1;
   }
-  // reachable === null (desconhecido): nao ajusta, incerteza pura.
+  // reachable === null (unknown): no adjustment, pure uncertainty.
 
   return { mu: clamp01(mu), lambda: clamp01(lambda) };
 }

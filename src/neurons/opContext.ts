@@ -2,10 +2,9 @@ import type { Asset, OpContextSignal } from "../core/types.js";
 import { clamp01, type Evidence } from "../core/paraconsistent.js";
 
 /**
- * Neuronio de contexto operacional — equivalente ao "contexto operacional"
- * do artigo original (backup autorizado, manutencao programada). Aqui:
- * janelas de manutencao/pentest, ambiente de baixo trafego, exposicao
- * publica e presenca de middleware de autenticacao.
+ * Operational-context neuron — deployment/runtime facts that explain a
+ * finding rather than confirm it: maintenance/pentest windows, low-traffic
+ * environments, public exposure, and presence of auth middleware.
  */
 export function opContextNeuron(signal: OpContextSignal, asset: Asset): Evidence {
   let mu = 0.1;

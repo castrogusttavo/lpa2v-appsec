@@ -2,13 +2,13 @@ import type { CodeContextSignal } from "../core/types.js";
 import { clamp01, type Evidence } from "../core/paraconsistent.js";
 
 /**
- * Neuronio de contexto de codigo — nao detecta vulnerabilidades por si so,
- * mas fornece evidencia (favoravel ou desfavoravel) sobre se um achado dos
- * detectores primarios (SAST/SCA/DAST) reflete risco real.
+ * Code-context neuron — doesn't detect vulnerabilities on its own, but
+ * supplies evidence (favorable or unfavorable) on whether a finding from
+ * the primary detectors (SAST/SCA/DAST) reflects real risk.
  */
 export function codeContextNeuron(signal: CodeContextSignal): Evidence {
-  // Baseline neutra (GC = 0): sem nenhuma flag, este neuronio nao tem
-  // opiniao e nao deve puxar a media do cluster em nenhuma direcao.
+  // Neutral baseline (GC = 0): with no flag set, this neuron has no
+  // opinion and shouldn't pull the cluster's mean in either direction.
   let mu = 0.1;
   let lambda = 0.1;
 
