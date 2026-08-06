@@ -11,11 +11,11 @@ export interface Lpa2vClusterOptions {
 }
 
 /**
- * Cluster hierarquico LPA2v: neuronios de dominio -> neuronio mestre
- * (correlacao contextual) -> persistencia temporal -> classe final.
- * Mantem estado por ativo (janela de persistencia), por isso e um objeto
- * com estado e nao uma funcao pura — precisa ser alimentado em ordem de
- * tick crescente por ativo, como faz o simulador.
+ * Hierarchical LPA2v cluster: domain neurons -> master neuron (contextual
+ * correlation) -> temporal persistence -> final class. Keeps per-asset
+ * state (the persistence window), so it's a stateful object rather than a
+ * pure function — it must be fed in increasing-tick order per asset, which
+ * is what the simulator does.
  */
 export class Lpa2vCluster {
   private readonly tracker: PersistenceTracker;

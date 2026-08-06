@@ -1,16 +1,14 @@
 import type { ParaClass } from "../core/types.js";
 
-// Persistencia temporal: o artigo original aplica "persistencia temporal de
-// cinco minutos antes de emitir a classe final". Aqui cada "tick" representa
-// um ciclo de scan (nao um minuto), e o cluster so deixa uma severidade
-// subir para degradacao/critico depois que ela se sustenta por
-// `windowSize` ticks consecutivos. Isso tem dois efeitos, ambos
-// intencionais e visiveis nos cenarios simulados:
-//   1. Evita que um achado isolado e instavel (ex.: scanner instavel)
-//      dispare direto um alerta critico.
-//   2. Cria um atraso de "aquecimento": a severidade so escala depois de
-//      confirmada a tendencia, o que produz o efeito de antecipacao (o grau
-//      de certeza sobe visivelmente antes da classe final acompanhar).
+// Temporal persistence: each "tick" here represents one scan cycle (not a
+// minute), and the cluster only lets a severity climb to degradacao/critico
+// once it's been sustained for `windowSize` consecutive ticks. This has two
+// intentional effects, both visible in the simulated scenarios:
+//   1. Prevents an isolated, unstable finding (e.g. a flaky scanner) from
+//      firing a critical alert outright.
+//   2. Creates a "warm-up" delay: severity only escalates once the trend is
+//      confirmed, which produces an anticipation effect (the certainty
+//      degree rises visibly before the final class catches up).
 
 const RANK: Record<Exclude<ParaClass, "inconsistente">, number> = {
   normal: 0,
@@ -33,8 +31,8 @@ export class PersistenceTracker {
 
   apply(assetId: string, rawClass: ParaClass): ParaClass {
     if (rawClass === "inconsistente") {
-      // Contradicao e, em si, o resultado informativo — nao ha razao para
-      // atrasar o report, e o tick nao entra na janela de severidade.
+      // Contradiction is itself the informative result — no reason to
+      // delay reporting it, and the tick doesn't enter the severity window.
       return "inconsistente";
     }
 
@@ -51,7 +49,7 @@ export class PersistenceTracker {
 
     const finalClass = RANK_TO_CLASS[sustainedRank];
     if (finalClass === undefined) {
-      throw new Error(`Rank invalido: ${sustainedRank}`);
+      throw new Error(`Invalid rank: ${sustainedRank}`);
     }
     return finalClass;
   }

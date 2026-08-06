@@ -7,13 +7,14 @@ import { codeContextNeuron } from "../neurons/codeContext.js";
 import { opContextNeuron } from "../neurons/opContext.js";
 
 /**
- * Pesos dos neuronios de dominio na agregacao do neuronio mestre.
- * SAST/SCA/DAST sao detectores primarios. Contexto de codigo e contexto
- * operacional recebem peso maior que um detector individual porque, quando
- * disparam, refletem metadado quase-factual (esta em teste, esta em janela
- * de manutencao autorizada) em vez de um match probabilistico — devem ser
- * capazes de anular o veredito de um unico detector primario, do mesmo
- * jeito que "backup autorizado" anula CPU alta no artigo original.
+ * Domain neuron weights in the master neuron's aggregation. SAST/SCA/DAST
+ * are the primary detectors. Code context and operational context get a
+ * higher weight than a single detector because, when they fire, they
+ * reflect near-factual metadata (this is a test, this is an authorized
+ * maintenance window) rather than a probabilistic match — they need to be
+ * able to override a single primary detector's verdict, e.g. an
+ * authorized maintenance window explaining away an otherwise-alarming
+ * technical signal.
  */
 export const DEFAULT_WEIGHTS = {
   sast: 1.2,
@@ -41,7 +42,7 @@ export function evaluateDomainNeurons(signal: RawSignal, asset: Asset): DomainBr
   };
 }
 
-/** Neuronio mestre: agrega as evidencias dos neuronios de dominio (correlacao contextual). */
+/** Master neuron: aggregates domain-neuron evidence (contextual correlation). */
 export function masterNeuron(
   breakdown: DomainBreakdown,
   weights: typeof DEFAULT_WEIGHTS = DEFAULT_WEIGHTS,
@@ -56,18 +57,18 @@ export function masterNeuron(
 }
 
 /**
- * Sinal de contradicao: o maior mu entre os DETECTORES PRIMARIOS (SAST/SCA/
- * DAST) vs. o maior lambda entre eles (podem vir de detectores diferentes).
- * Preserva o caso em que um detector afirma risco com forca e outro o
- * refuta com forca, em vez de deixar a media apagar os dois extremos — ver
- * nota em `classifyCluster`.
+ * Contradiction signal: the largest mu across the PRIMARY DETECTORS
+ * (SAST/SCA/DAST) vs. the largest lambda across them (may come from
+ * different detectors). Preserves the case where one detector strongly
+ * asserts risk and another strongly refutes it, instead of letting the
+ * mean erase both extremes — see the note on `classifyCluster`.
  *
- * Contexto de codigo/operacional fica de fora deste calculo de proposito:
- * eles nao sao "mais uma opiniao sobre existir vulnerabilidade", sao
- * metadado explicativo (por que o detector disparou) — quando um contexto
- * explica um achado (ex.: janela de manutencao autorizada), o resultado
- * correto e suprimir a severidade, nao declarar um estado inconsistente
- * pedindo revisao humana.
+ * Code/operational context is deliberately left out of this calculation:
+ * they aren't "one more opinion on whether a vulnerability exists," they
+ * are explanatory metadata (why the detector fired) — when context
+ * explains a finding (e.g. an authorized maintenance window), the correct
+ * outcome is to suppress the severity, not to declare an inconsistent
+ * state that asks for human review.
  */
 export function contradictionSignal(breakdown: DomainBreakdown): Evidence {
   const primary = [breakdown.sast, breakdown.sca, breakdown.dast];
