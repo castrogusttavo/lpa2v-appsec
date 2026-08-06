@@ -20,10 +20,10 @@ const DEV_TOOL_RE =
   /^(eslint|@types\/|vitest|typescript|tsx$|biome|husky|commitlint|semgrep|prettier|@biomejs\/|lint-staged)/i;
 
 /**
- * `snyk test --all-projects` escaneia varios manifestos (app + bundles
- * gerados em .next/standalone/**), entao a MESMA vulnerabilidade de
- * dependencia aparece varias vezes — uma por manifesto. Deduplicamos por
- * (packageName, id) para o achado real virar 1 linha na planilha, nao N.
+ * `snyk test --all-projects` scans several manifests (app + bundles
+ * generated under .next/standalone/**), so the SAME dependency
+ * vulnerability shows up several times — one per manifest. We deduplicate
+ * by (packageName, id) so the real finding becomes 1 spreadsheet row, not N.
  */
 export function parseSnyk(runs: SnykRun[]): RealFinding[] {
   const byKey = new Map<string, { vuln: SnykVuln; count: number }>();

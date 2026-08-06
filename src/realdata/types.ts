@@ -1,10 +1,10 @@
-// Achado real normalizado, extraido do output bruto de Semgrep/Snyk/ZAP.
-// Diferente dos cenarios sinteticos (onde um "evento" ja tem sinal
-// simultaneo de varios dominios sobre a MESMA questao), a maioria dos
-// achados reais aqui e independente: um finding do SAST fala de um XSS,
-// um finding do SCA fala de uma dependencia — nao sao evidencia
-// multi-dominio sobre o mesmo risco. So correlacionam quando de fato
-// apontam pro mesmo componente/rota.
+// Normalized real finding, extracted from raw Semgrep/Snyk/ZAP output.
+// Unlike the synthetic scenarios (where an "event" already carries
+// simultaneous signal from several domains about the SAME question), most
+// real findings here are independent: a SAST finding is about an XSS, an
+// SCA finding is about a dependency — they aren't multi-domain evidence
+// about the same risk. They only correlate when they actually point at
+// the same component/route.
 
 export interface RealFinding {
   id: string;
@@ -14,11 +14,11 @@ export interface RealFinding {
   severityRaw: string;
   detail: string;
   instanceCount: number;
-  /** Heuristicas — chutes iniciais para o humano corrigir na planilha, nao verdade. */
+  /** Heuristics — initial guesses for a human to correct in the spreadsheet, not ground truth. */
   guessDevOnly: boolean;
   guessTestFile: boolean;
   guessPublicFacing: boolean;
-  /** Registro original da ferramenta (SemgrepResult/SnykVuln/ZapAlert) para extrair campos extras sob demanda. */
+  /** Original tool record (SemgrepResult/SnykVuln/ZapAlert) to pull extra fields from on demand. */
   raw: unknown;
 }
 

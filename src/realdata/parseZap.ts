@@ -37,8 +37,8 @@ export function parseZap(report: ZapReport): RealFinding[] {
       if (alert.instances.length === 0) continue;
       const sample = alert.instances[0];
       findings.push({
-        // pluginid sozinho nao e unico: o ZAP reusa o mesmo id de plugin
-        // para sub-checks distintas (ex.: 10055 cobre duas variantes de CSP).
+        // pluginid alone isn't unique: ZAP reuses the same plugin id
+        // across distinct sub-checks (e.g. 10055 covers two CSP variants).
         id: `dast-${i++}-${alert.pluginid}-${slugify(alert.name)}`,
         source: "dast",
         title: alert.name,

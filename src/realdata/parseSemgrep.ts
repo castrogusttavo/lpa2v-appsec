@@ -27,7 +27,7 @@ export function parseSemgrep(report: SemgrepReport): RealFinding[] {
       instanceCount: 1,
       guessDevOnly: false,
       guessTestFile: TEST_PATH_RE.test(r.path),
-      // rota sob grupo publico do App Router (nao (private)/[workspace-slug]) -> chute de exposicao publica
+      // route under a public App Router group (not (private)/[workspace-slug]) -> guess public exposure
       guessPublicFacing: !r.path.includes("(private)"),
       raw: r,
     };
