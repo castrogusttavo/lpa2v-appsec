@@ -1,16 +1,20 @@
-"""Gera as figuras do artigo a partir de out/results.json e out/events.csv.
+"""Generates the article figures from out/results.json and out/events.csv.
 
-Uso:
+Usage:
     plots/.venv/bin/python plots/make_figures.py
 
-Le os arquivos ja exportados pelo simulador (nao reimplementa nenhuma
-logica de classificacao) e escreve PDF + SVG + PNG (300dpi) em
-plots/figures/, prontos para colar no artigo (LaTeX ou Word).
+Reads the files already exported by the simulator (doesn't reimplement any
+classification logic) and writes PDF + SVG + PNG (300dpi) to
+plots/figures/, ready to paste into the article (LaTeX or Word).
 
-Paleta e especificacoes de marca seguem a skill de dataviz do projeto:
-ordem categorica fixa (nunca por ranking de desempenho), uma unica
-escala por eixo, grades solidas em hairline, rotulos diretos seletivos,
-texto sempre em tinta neutra (nunca na cor da serie).
+Chart text (titles, axis labels, legends) stays in Portuguese: these
+figures are the same ones already pasted into this project's pt-BR
+write-up. Only code comments/docstrings are in English.
+
+Palette and mark specs follow this project's dataviz guidelines: fixed
+categorical order (never reordered by performance), a single scale per
+axis, solid hairline grids, selective direct labels, text always in
+neutral ink (never in the series color).
 """
 
 from __future__ import annotations
@@ -28,10 +32,10 @@ REAL_DATA_DIR = ROOT / "real-data"
 FIG_DIR = Path(__file__).resolve().parent / "figures"
 FIG_DIR.mkdir(exist_ok=True)
 
-# --- paleta (ordem categorica fixa, nunca reordenada por desempenho) ---
+# --- palette (fixed categorical order, never reordered by performance) ---
 COLOR = {
-    "threshold": "#2a78d6",  # slot 1 azul
-    "rule-based": "#eb6834",  # slot 2 laranja
+    "threshold": "#2a78d6",  # slot 1 blue
+    "rule-based": "#eb6834",  # slot 2 orange
     "lpa2v-cluster": "#1baf7a",  # slot 3 aqua
 }
 MECH_LABEL = {
@@ -48,8 +52,8 @@ REPO_LABEL = {
     "plane": "Plane",
     "portfolio": "portfólio",
 }
-# threshold e rule-based coincidem em alguns cenarios (ex.: secret-sprawl) —
-# traco e marcador distintos garantem que a linha de baixo nao desapareça.
+# threshold and rule-based coincide in some scenarios (e.g. secret-sprawl) —
+# distinct dash/marker styles keep the bottom line from disappearing.
 LINESTYLE = {"threshold": "-", "rule-based": (0, (4, 2)), "lpa2v-cluster": "-"}
 MARKER = {"threshold": "o", "rule-based": "s", "lpa2v-cluster": "D"}
 
@@ -59,8 +63,8 @@ INK_MUTED = "#898781"
 GRID = "#e1e0d9"
 SURFACE = "#fcfcfb"
 
-# rampa ordinal de severidade (azul, claro->escuro) + cor categorica
-# distinta para "inconsistente" (nao faz parte da ordem de severidade)
+# ordinal severity ramp (blue, light->dark) + distinct categorical color
+# for "inconsistente" (not part of the severity ordering)
 SEVERITY_ORDER = ["normal", "atencao", "degradacao", "critico"]
 SEVERITY_RAMP = {
     "normal": "#cde2fb",
@@ -68,7 +72,7 @@ SEVERITY_RAMP = {
     "degradacao": "#256abf",
     "critico": "#0d366b",
 }
-INCONSISTENT_COLOR = "#4a3aa7"  # violeta (slot 7) — estado a parte, nao ordinal
+INCONSISTENT_COLOR = "#4a3aa7"  # violet (slot 7) — a separate state, not ordinal
 
 plt.rcParams.update(
     {
@@ -132,8 +136,7 @@ def bar_value_labels(ax, bars, fmt="{:.0f}"):
 
 
 # ---------------------------------------------------------------------------
-# Figura 1 — diagrama conceitual: threshold -> rule-based -> cluster LPA2v
-# (equivalente a Fig. 1 do artigo original)
+# Figure 1 — conceptual diagram: threshold -> rule-based -> LPA2v cluster
 # ---------------------------------------------------------------------------
 def fig_conceptual_diagram():
     from matplotlib.patches import FancyBboxPatch
@@ -199,7 +202,7 @@ def fig_conceptual_diagram():
         x0 = b["x0"]
         color = COLOR[b["mech"]]
 
-        # corpo da caixa
+        # box body
         ax.add_patch(
             FancyBboxPatch(
                 (x0, box_y0),
@@ -212,7 +215,7 @@ def fig_conceptual_diagram():
                 zorder=2,
             )
         )
-        # cabecalho colorido
+        # colored header
         ax.add_patch(
             FancyBboxPatch(
                 (x0, box_y0 + box_h - header_h),
@@ -225,8 +228,8 @@ def fig_conceptual_diagram():
                 zorder=3,
             )
         )
-        # a base do cabecalho tem cantos arredondados no boxstyle; cobre os
-        # cantos inferiores do cabecalho para ficarem retos (encontro com o corpo)
+        # the header's base has rounded corners from boxstyle; cover its
+        # bottom corners so they're square (where it meets the body)
         ax.add_patch(
             plt.Rectangle(
                 (x0, box_y0 + box_h - header_h),
@@ -278,7 +281,7 @@ def fig_conceptual_diagram():
             )
             bullet_y -= 0.30 * (bullet.count("\n") + 1) + 0.28
 
-    # setas de evolucao entre as caixas
+    # evolution arrows between the boxes
     arrow_labels = ["adiciona\nregras explícitas", "adiciona\ncorrelação contextual"]
     for i, label in enumerate(arrow_labels):
         x_from = boxes[i]["x0"] + box_w
@@ -302,7 +305,7 @@ def fig_conceptual_diagram():
             linespacing=1.2,
         )
 
-    # faixa de beneficios do cluster LPA2v
+    # LPA2v cluster benefits banner
     banner_y0, banner_h = 0.15, 1.35
     ax.add_patch(
         FancyBboxPatch(
@@ -352,7 +355,7 @@ def fig_conceptual_diagram():
 
 
 # ---------------------------------------------------------------------------
-# Figura 2 — precisao / recall / F1 por mecanismo (equivalente Fig. 2 do artigo)
+# Figure 2 — precision / recall / F1 by mechanism
 # ---------------------------------------------------------------------------
 def fig_overall_metrics(results: dict):
     metrics = ["precision", "recall", "f1"]
@@ -388,7 +391,7 @@ def fig_overall_metrics(results: dict):
 
 
 # ---------------------------------------------------------------------------
-# Figura 3 — TP / FP / FN por mecanismo (equivalente Fig. 2, "erros")
+# Figure 3 — TP / FP / FN by mechanism
 # ---------------------------------------------------------------------------
 def fig_error_volume(results: dict):
     fields = ["truePositives", "falsePositives", "falseNegatives"]
@@ -422,22 +425,22 @@ def fig_error_volume(results: dict):
 
 
 # ---------------------------------------------------------------------------
-# Figura 4 — evolucao temporal no cenario 'secret-sprawl' (equivalente Fig. 3/4)
+# Figure 4 — temporal evolution in the 'secret-sprawl' scenario
 # ---------------------------------------------------------------------------
 def fig_secret_sprawl_timeline(events: pd.DataFrame, results: dict):
     scenario = events[events["scenarioId"] == "secret-sprawl"]
     rank = {"normal": 0, "atencao": 1, "degradacao": 2, "critico": 3, "inconsistente": 1.5}
 
-    # Tick em que a evidencia bruta cruza o limite rigido do mecanismo
-    # Threshold (severidade SAST == critical OU CVSS SCA >= 9 OU DAST
-    # confirmado) — mesmo valor reportado pelo `pnpm sim` no terminal.
-    # Nao esta no events.csv por evento, entao fica fixo aqui; ver
-    # src/metrics/leadTime.ts para a definicao exata.
+    # Tick at which the raw evidence crosses the Threshold mechanism's hard
+    # limit (SAST severity == critical OR SCA CVSS >= 9 OR DAST confirmed)
+    # — same value reported by `pnpm sim` in the terminal. Not present in
+    # events.csv per event, so it's hardcoded here; see
+    # src/metrics/leadTime.ts for the exact definition.
     hard_limit_tick = 24
 
     fig, ax = plt.subplots(figsize=(6.4, 3.6))
     for mech in MECHANISMS:
-        # media do rank por tick entre os 3 ativos do cenario (todos seguem o mesmo padrao)
+        # mean rank per tick across the scenario's 3 assets (all follow the same pattern)
         sub_mean = (
             scenario[scenario["mechanism"] == mech]
             .assign(rank=lambda d: d["class"].map(rank))
@@ -483,8 +486,8 @@ def fig_secret_sprawl_timeline(events: pd.DataFrame, results: dict):
 
 
 # ---------------------------------------------------------------------------
-# Figuras 5 e 6 — mapa de calor ativo x tick, os 3 mecanismos lado a lado
-# (equivalente a Fig. 5 do artigo original: distribuicao espacial)
+# Figures 5 and 6 — asset x tick heatmap, the 3 mechanisms side by side
+# (spatial distribution)
 # ---------------------------------------------------------------------------
 def fig_heatmap(events: pd.DataFrame, scenario_id: str, fig_number: int):
     from matplotlib.colors import ListedColormap, BoundaryNorm
@@ -531,7 +534,7 @@ def fig_heatmap(events: pd.DataFrame, scenario_id: str, fig_number: int):
 
 
 # ---------------------------------------------------------------------------
-# Figura 7 — alertas acumulados ao longo da simulacao (equivalente Fig. 6)
+# Figure 7 — cumulative alerts over the course of the simulation
 # ---------------------------------------------------------------------------
 def fig_cumulative_alerts(events: pd.DataFrame):
     fig, ax = plt.subplots(figsize=(6.4, 3.6))
@@ -558,7 +561,7 @@ def fig_cumulative_alerts(events: pd.DataFrame):
 
 
 # ---------------------------------------------------------------------------
-# Figura 8 — Tabela 1 (validacao com dados reais) renderizada como imagem
+# Figure 8 — Table 1 (real-data validation) rendered as an image
 # ---------------------------------------------------------------------------
 def fig_real_data_table(real_data: dict):
     rows = []
@@ -633,7 +636,7 @@ def fig_real_data_table(real_data: dict):
 
 
 # ---------------------------------------------------------------------------
-# Figura 9 — precisao/recall/F1 combinados nos dados reais (equivalente Fig. 2)
+# Figure 9 — combined precision/recall/F1 on real data
 # ---------------------------------------------------------------------------
 def fig_real_data_metrics(real_data: dict):
     metrics = ["precision", "recall", "f1"]
@@ -675,12 +678,12 @@ def fig_real_data_metrics(real_data: dict):
 
 
 def main():
-    print(f"Lendo dados de {OUT_DIR} ...")
+    print(f"Reading data from {OUT_DIR} ...")
     results = load_results()
     events = load_events()
     real_data = load_real_data()
 
-    print(f"Gerando figuras em {FIG_DIR} ...")
+    print(f"Generating figures in {FIG_DIR} ...")
     fig_conceptual_diagram()
     fig_overall_metrics(results)
     fig_error_volume(results)
@@ -690,7 +693,7 @@ def main():
     fig_cumulative_alerts(events)
     fig_real_data_table(real_data)
     fig_real_data_metrics(real_data)
-    print("Concluído.")
+    print("Done.")
 
 
 if __name__ == "__main__":
