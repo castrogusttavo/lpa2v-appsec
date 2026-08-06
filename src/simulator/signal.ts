@@ -29,7 +29,7 @@ export interface SignalOverrides {
   opContext?: Partial<OpContextSignal>;
 }
 
-/** Constroi um RawSignal "limpo" (nenhum achado) com overrides pontuais por sub-dominio. */
+/** Builds a "clean" RawSignal (no findings) with targeted per-sub-domain overrides. */
 export function buildSignal(overrides: SignalOverrides = {}): RawSignal {
   return {
     sast: { ...CLEAN_SAST, ...overrides.sast },

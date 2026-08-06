@@ -8,7 +8,7 @@ export interface ScenarioResult {
   id: string;
   name: string;
   description: string;
-  /** Cenario representa uma vulnerabilidade real (usado so para narrativa/relatorio). */
+  /** Whether the scenario represents a real vulnerability (used only for narrative/reporting). */
   groundTruthNarrative: "positivo" | "negativo" | "misto";
   assets: Asset[];
   events: SimEvent[];
@@ -39,8 +39,10 @@ function pushEvents(
   }
 }
 
-// 1. Backup/migracao legitima: pico de dependencias durante janela de migracao,
-//    sem exploracao real. Equivalente ao "backup autorizado" do artigo original.
+// 1. Legitimate backup/migration: dependency spike during a migration
+//    window, no real exploitation. `name`/`description` stay in Portuguese
+//    (pt-BR) below — they're article-facing text, printed in reports and
+//    matched against the methodology section of this project's write-up.
 const dependencyBumpNoise: ScenarioFn = (rng) => {
   const assets = makeAssets("dep-bump", 40);
   const events: SimEvent[] = [];
@@ -66,9 +68,9 @@ const dependencyBumpNoise: ScenarioFn = (rng) => {
   };
 };
 
-// 2. Endpoint protegido por WAF: SAST acusa falta de auth, DAST tenta explorar
-//    e e bloqueado, mas outros sinais (ex.: resposta de health-check) seguem OK.
-//    Evidencia favoravel e desfavoravel fortes ao mesmo tempo -> inconsistente.
+// 2. WAF-shielded endpoint: SAST flags missing auth, DAST tries to exploit
+//    it and gets blocked, but other signals (e.g. health-check response)
+//    stay OK. Strong favorable and unfavorable evidence at once -> inconsistente.
 const wafShieldedEndpoint: ScenarioFn = (rng) => {
   const assets = makeAssets("waf-shield", 15, { publicFacing: true, hasAuthMiddleware: false });
   const events: SimEvent[] = [];
@@ -90,8 +92,8 @@ const wafShieldedEndpoint: ScenarioFn = (rng) => {
   };
 };
 
-// 3. Vazamento de segredo progressivo: evidencia fraca no inicio, escalando
-//    para critica — equivalente ao loop Ethernet progressivo do artigo.
+// 3. Progressive secret sprawl: weak evidence early on, escalating to
+//    critical over time.
 const secretSprawlProgressive: ScenarioFn = (rng) => {
   const assets = makeAssets("secret-sprawl", 3, { publicFacing: true, hasAuthMiddleware: true });
   const events: SimEvent[] = [];
@@ -127,7 +129,7 @@ const secretSprawlProgressive: ScenarioFn = (rng) => {
   };
 };
 
-// 4. Janela de pentest autorizado: DAST dispara varios achados esperados.
+// 4. Authorized pentest window: DAST fires several expected findings.
 const pentestWindow: ScenarioFn = (rng) => {
   const assets = makeAssets("pentest-window", 25, { publicFacing: true, hasAuthMiddleware: true });
   const events: SimEvent[] = [];
@@ -149,7 +151,7 @@ const pentestWindow: ScenarioFn = (rng) => {
   };
 };
 
-// 5. Ruido de staging com baixo trafego: erros elevados sem risco pratico.
+// 5. Low-traffic staging noise: elevated errors with no practical risk.
 const stagingNoise: ScenarioFn = (rng) => {
   const assets = makeAssets("staging-noise", 30, { publicFacing: false, hasAuthMiddleware: true });
   const events: SimEvent[] = [];
@@ -171,8 +173,8 @@ const stagingNoise: ScenarioFn = (rng) => {
   };
 };
 
-// 6. Scanner instavel (equivalente a port flapping): achado aparece e some
-//    entre scans consecutivos sem motivo real.
+// 6. Flaky scanner (like port flapping): a finding appears and disappears
+//    between consecutive scans for no real reason.
 const flakyScanner: ScenarioFn = (rng) => {
   const assets = makeAssets("flaky-scanner", 20);
   const events: SimEvent[] = [];
@@ -198,7 +200,7 @@ const flakyScanner: ScenarioFn = (rng) => {
   };
 };
 
-// 7. RCE confirmado: multiplas ferramentas concordam, publico, sem auth.
+// 7. Confirmed RCE: multiple tools agree, public-facing, no auth.
 const confirmedRce: ScenarioFn = (rng) => {
   const assets = makeAssets("confirmed-rce", 4, { publicFacing: true, hasAuthMiddleware: false, tier: "critica" });
   const events: SimEvent[] = [];
@@ -225,7 +227,7 @@ const confirmedRce: ScenarioFn = (rng) => {
   };
 };
 
-// 8. SQLi confirmado: SAST + DAST concordam, SCA em silencio.
+// 8. Confirmed SQLi: SAST + DAST agree, SCA is silent.
 const confirmedSqli: ScenarioFn = (rng) => {
   const assets = makeAssets("confirmed-sqli", 4, { publicFacing: true, hasAuthMiddleware: false, tier: "critica" });
   const events: SimEvent[] = [];
@@ -250,7 +252,7 @@ const confirmedSqli: ScenarioFn = (rng) => {
   };
 };
 
-// 9. Modulo depreciado de baixo risco: achados persistentes, sem exposicao.
+// 9. Low-risk deprecated module: persistent findings, no exposure.
 const deprecatedModule: ScenarioFn = (rng) => {
   const assets = makeAssets("deprecated-module", 20, { publicFacing: false, hasAuthMiddleware: true });
   const events: SimEvent[] = [];
@@ -272,7 +274,7 @@ const deprecatedModule: ScenarioFn = (rng) => {
   };
 };
 
-// 10. Falso disparo em fixture de teste.
+// 10. False trigger in a test fixture.
 const testFixtureFalseTrigger: ScenarioFn = (rng) => {
   const assets = makeAssets("test-fixture", 25);
   const events: SimEvent[] = [];
@@ -294,7 +296,7 @@ const testFixtureFalseTrigger: ScenarioFn = (rng) => {
   };
 };
 
-// 11. Compromisso de supply-chain silencioso: so o SCA ve, dificil de detectar.
+// 11. Silent supply-chain compromise: only SCA sees it, hard to detect.
 const silentSupplyChain: ScenarioFn = (rng) => {
   const assets = makeAssets("silent-supply-chain", 2, { publicFacing: true, hasAuthMiddleware: true, tier: "critica" });
   const events: SimEvent[] = [];
@@ -319,7 +321,7 @@ const silentSupplyChain: ScenarioFn = (rng) => {
   };
 };
 
-// 12. Ambiguidade multi-sinal em rede interna: achados moderados, baixo risco pratico.
+// 12. Multi-signal ambiguity on an internal network: moderate findings, low practical risk.
 const internalOnlyAmbiguity: ScenarioFn = (rng) => {
   const assets = makeAssets("internal-ambiguity", 18, { publicFacing: false, hasAuthMiddleware: true });
   const events: SimEvent[] = [];

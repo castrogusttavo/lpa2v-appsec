@@ -5,7 +5,7 @@ import { SCENARIOS, type ScenarioResult } from "./scenarios.js";
 export interface SimulationData {
   scenarios: ScenarioResult[];
   assets: Map<string, Asset>;
-  /** Eventos ordenados por cenario e tick (a ordem importa para a persistencia temporal). */
+  /** Events ordered by scenario and tick (order matters for temporal persistence). */
   events: SimEvent[];
 }
 
