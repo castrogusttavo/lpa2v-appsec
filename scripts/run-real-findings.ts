@@ -22,11 +22,11 @@ interface LabelRow {
 }
 
 /**
- * Parser CSV minimo mas correto (RFC4180): campos entre aspas podem conter
- * virgula, aspas escapadas ("") e QUEBRA DE LINHA — o que de fato acontece
- * na coluna `detail` (texto de scanner com \n embutido). Um split("\n")
- * ingenuo quebra a linha no meio do campo e desalinha as colunas do resto
- * do arquivo; por isso isso e tokenizado caractere a caractere.
+ * Minimal but correct CSV parser (RFC4180): quoted fields can contain
+ * commas, escaped quotes (""), and LINE BREAKS — which does happen in the
+ * `detail` column (scanner text with an embedded \n). A naive split("\n")
+ * breaks the line mid-field and misaligns the columns for the rest of the
+ * file; that's why this is tokenized character by character.
  */
 function parseCsv(text: string): Record<string, string>[] {
   const rows: string[][] = [];
@@ -84,8 +84,8 @@ function loadRepo(repo: string): { findings: RealFinding[]; labels: Map<string, 
   const snyk = parseSnyk(Array.isArray(snykRaw) ? snykRaw : [snykRaw as never]);
   const zap = parseZap(readJson("zap-results.json"));
 
-  // Prefixa o id com o repo — os parsers geram ids curtos (ex.: "sca-0-next")
-  // que colidiriam entre repositorios diferentes ao combinar tudo.
+  // Prefix the id with the repo — the parsers generate short ids (e.g.
+  // "sca-0-next") that would collide across different repos once combined.
   const findings = [...semgrep, ...snyk, ...zap].map((f) => ({ ...f, id: `${repo}::${f.id}` }));
 
   const csvText = readFileSync(`${dir}labeled.csv`, "utf-8");
@@ -103,7 +103,7 @@ function loadRepo(repo: string): { findings: RealFinding[]; labels: Map<string, 
 
   const missing = findings.filter((f) => !labels.has(f.id));
   if (missing.length > 0) {
-    console.error(`ATENCAO (${repo}): ${missing.length} achado(s) sem rotulo:`, missing.map((f) => f.id));
+    console.error(`WARNING (${repo}): ${missing.length} finding(s) without a label:`, missing.map((f) => f.id));
     process.exit(1);
   }
 
@@ -120,9 +120,9 @@ function buildRawSignal(f: RealFinding, label: LabelRow): { signal: RawSignal; a
   const overrides: Parameters<typeof buildSignal>[0] = {
     codeContext: {
       inTestOrFixture: label.guessTestFile,
-      // Nao ha campo proprio para "dependencia so-de-build" no schema
-      // sintetico original; reaproveitamos deprecatedModule como proxy
-      // deliberado (mesma semantica pratica: baixa prioridade real).
+      // There's no dedicated "build-only dependency" field in the original
+      // synthetic schema; we reuse deprecatedModule as a deliberate proxy
+      // (same practical semantics: low real priority).
       deprecatedModule: label.guessDevOnly,
     },
     opContext: {
@@ -135,7 +135,7 @@ function buildRawSignal(f: RealFinding, label: LabelRow): { signal: RawSignal; a
     overrides.sast = {
       hit: true,
       severity: SEMGREP_SEVERITY[raw.extra.severity] ?? "medium",
-      confidence: "medium", // Semgrep JSON usado nao trouxe metadata.confidence
+      confidence: "medium", // the Semgrep JSON used didn't include metadata.confidence
       reachable: null,
     };
   } else if (f.source === "sca") {
@@ -145,16 +145,16 @@ function buildRawSignal(f: RealFinding, label: LabelRow): { signal: RawSignal; a
       hit: true,
       cvss,
       patchAvailable: raw.isUpgradable ?? null,
-      exploitMaturity: cvss >= 9 ? "poc" : "none", // Snyk CLI nao trouxe exploitMaturity real
+      exploitMaturity: cvss >= 9 ? "poc" : "none", // the Snyk CLI didn't provide real exploitMaturity
     };
   } else {
     const raw = f.raw as { riskdesc: string };
-    // riskdesc do ZAP vem como "Medium (High)" = "{risco} ({confianca})";
-    // usamos o risco (nao a confianca) pra graduar a evidencia passiva.
+    // ZAP's riskdesc comes as "Medium (High)" = "{risk} ({confidence})";
+    // we use risk (not confidence) to grade the passive evidence.
     const risk = raw.riskdesc.split(" (")[0]?.toLowerCase() ?? "";
     const passiveSeverity =
       risk === "high" ? "high" : risk === "medium" ? "medium" : risk === "low" ? "low" : "info";
-    overrides.dast = { hit: true, confirmed: null, passiveSeverity }; // baseline scan: deteccao passiva, nao exploracao confirmada
+    overrides.dast = { hit: true, confirmed: null, passiveSeverity }; // baseline scan: passive detection, not confirmed exploitation
   }
 
   const asset: Asset = {
@@ -178,7 +178,7 @@ const classifiedAll: Record<MechanismName, ClassifiedEvent[]> = {
 
 for (const repo of REPOS) {
   const { findings, labels } = loadRepo(repo);
-  const lpa2v = makeLpa2vMechanism(); // instancia nova por repo: nao ha razao pra um ativo de um repo "persistir" contra o de outro
+  const lpa2v = makeLpa2vMechanism(); // fresh instance per repo: no reason for one repo's asset to "persist" against another's
   const perRepo: Record<MechanismName, ClassifiedEvent[]> = {
     threshold: [],
     "rule-based": [],
@@ -208,7 +208,7 @@ for (const repo of REPOS) {
   for (const m of mechanisms) classifiedAll[m].push(...perRepo[m]);
 }
 
-// --- Relatorio ---
+// --- Report (console output stays pt-BR: matches this project's write-up) ---
 console.log(`\nLPA2v-AppSec — validacao contra achados reais (${REPOS.length} repositorios)\n`);
 
 console.log("Por repositorio\n");
@@ -240,7 +240,7 @@ const combinedRows = mechanisms.map((m) => {
 });
 printTable(["Mecanismo", "Precisao", "Recall", "F1", "TP", "FP", "FN", "Alertas", "Inconsist."], combinedRows);
 
-// --- Export para os graficos (plots/make_figures.py) ---
+// --- Export for the figures (plots/make_figures.py) ---
 const exportPath = new URL("../real-data/results.json", import.meta.url).pathname;
 writeFileSync(
   exportPath,

@@ -57,7 +57,7 @@ for (const event of sim.events) {
   });
 }
 
-// ---- Tabela geral (equivalente a Figura 2 do artigo original) ----
+// ---- Overall table (console output stays pt-BR: matches this project's write-up) ----
 console.log("Comparacao geral entre mecanismos\n");
 const mechanisms: MechanismName[] = ["threshold", "rule-based", "lpa2v-cluster"];
 const overallRows = mechanisms.map((m) => {
@@ -80,7 +80,7 @@ printTable(
   overallRows,
 );
 
-// ---- Tabela por cenario ----
+// ---- Per-scenario table ----
 console.log("\nDetalhe por cenario (alertas emitidos por mecanismo)\n");
 const scenarioRows = sim.scenarios.map((scenario) => {
   const perMechAlerts = mechanisms.map((m) => {
@@ -93,7 +93,7 @@ const scenarioRows = sim.scenarios.map((scenario) => {
 printTable(["Cenario", "Verdade", "Threshold", "Rule-Based", "LPA2v"], scenarioRows);
 console.log("(a = alertas normal/atencao/degradacao/critico, i = inconsistente)\n");
 
-// ---- Antecipacao no cenario progressivo (equivalente ao loop Ethernet) ----
+// ---- Anticipation in the progressive scenario ----
 console.log("Antecipacao de deteccao — cenario 'secret-sprawl' (evidencia progressiva)\n");
 const secretSprawl = sim.scenarios.find((s) => s.id === "secret-sprawl");
 if (secretSprawl) {
@@ -110,7 +110,7 @@ if (secretSprawl) {
   printTable(["Mecanismo", "Tick limite rigido", "1o tick >= degradacao", "Ticks de antecipacao"], leadRows);
 }
 
-// ---- Export para validacao/plote externo por terceiros ----
+// ---- Export for third-party validation/external plotting ----
 const outDir = new URL("../out/", import.meta.url).pathname;
 writeJson(`${outDir}results.json`, {
   seed: SEED,

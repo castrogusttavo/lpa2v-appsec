@@ -6,7 +6,7 @@ import type { RealFinding } from "../src/realdata/types.js";
 
 const REPO = process.argv[2];
 if (!REPO) {
-  console.error("Uso: tsx scripts/prepare-real-findings.ts <repo>  (ex.: nexo, steel)");
+  console.error("Usage: tsx scripts/prepare-real-findings.ts <repo>  (e.g.: nexo, steel)");
   process.exit(1);
 }
 const DATA_DIR = new URL(`../real-data/${REPO}/`, import.meta.url).pathname;
@@ -22,10 +22,10 @@ const zap = parseZap(readJson(`zap-results.json`));
 
 const all: RealFinding[] = [...semgrep, ...snyk, ...zap];
 
-console.log(`SAST (Semgrep): ${semgrep.length} achado(s)`);
-console.log(`SCA (Snyk, deduplicado): ${snyk.length} achado(s) unico(s)`);
-console.log(`DAST (ZAP, por tipo de alerta): ${zap.length} achado(s)`);
-console.log(`Total para rotular: ${all.length}`);
+console.log(`SAST (Semgrep): ${semgrep.length} finding(s)`);
+console.log(`SCA (Snyk, deduplicated): ${snyk.length} unique finding(s)`);
+console.log(`DAST (ZAP, by alert type): ${zap.length} finding(s)`);
+console.log(`Total to label: ${all.length}`);
 
 const headers = [
   "id",
@@ -59,7 +59,7 @@ const rows = all.map((f) =>
     f.guessTestFile,
     f.guessPublicFacing,
     f.detail,
-    "", // groundTruthVulnerable — preencher com TRUE ou FALSE
+    "", // groundTruthVulnerable — fill in with TRUE or FALSE
     "", // notes
   ]
     .map(csvEscape)
@@ -67,7 +67,7 @@ const rows = all.map((f) =>
 );
 
 writeFileSync(`${DATA_DIR}labeling.csv`, [headers.join(","), ...rows].join("\n") + "\n", "utf-8");
-console.log(`\nPlanilha gerada em real-data/${REPO}/labeling.csv`);
+console.log(`\nSpreadsheet generated at real-data/${REPO}/labeling.csv`);
 console.log(
-  `Preencha a coluna "groundTruthVulnerable" com TRUE ou FALSE para cada linha (as colunas guess* sao so um chute inicial — corrija se estiver errado).`,
+  `Fill in the "groundTruthVulnerable" column with TRUE or FALSE for each row (the guess* columns are just an initial guess — correct them if wrong).`,
 );
