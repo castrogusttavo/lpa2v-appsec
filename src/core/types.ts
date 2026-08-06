@@ -1,5 +1,5 @@
-// Tipos compartilhados do dominio AppSec adaptado do artigo original
-// (redes industriais -> triagem de findings de seguranca de aplicacao).
+// Shared domain types: AppSec finding triage (SAST/SCA/DAST) via the
+// LPA2v cluster.
 
 export type AssetTier = "baixa" | "media" | "alta" | "critica";
 
@@ -7,21 +7,21 @@ export interface Asset {
   id: string;
   name: string;
   tier: AssetTier;
-  /** Servico exposto publicamente (equivalente a "ativo exposto" na planta). */
+  /** Publicly exposed service. */
   publicFacing: boolean;
   hasAuthMiddleware: boolean;
 }
 
-/** Sinal bruto de SAST (ex.: Semgrep) para um ativo em um tick de scan. */
+/** Raw SAST signal (e.g. Semgrep) for an asset at a scan tick. */
 export interface SastSignal {
   hit: boolean;
   severity: "info" | "low" | "medium" | "high" | "critical";
   confidence: "low" | "medium" | "high";
-  /** Caminho de codigo alcancavel em runtime; null = desconhecido. */
+  /** Reachable at runtime; null = unknown. */
   reachable: boolean | null;
 }
 
-/** Sinal bruto de SCA (ex.: Snyk) para um ativo em um tick de scan. */
+/** Raw SCA signal (e.g. Snyk) for an asset at a scan tick. */
 export interface ScaSignal {
   hit: boolean;
   cvss: number | null;
@@ -29,33 +29,33 @@ export interface ScaSignal {
   exploitMaturity: "none" | "poc" | "active" | null;
 }
 
-/** Sinal bruto de DAST (ex.: ZAP) para um ativo em um tick de scan. */
+/** Raw DAST signal (e.g. OWASP ZAP) for an asset at a scan tick. */
 export interface DastSignal {
   hit: boolean;
-  /** Exploracao confirmada em runtime; null = deteccao passiva, sem confirmacao ativa (ex.: scan baseline) nem recusa (ex.: endpoint inacessivel). */
+  /** Confirmed runtime exploitation; null = passive detection (e.g. baseline scan), no active confirmation and no refutation (e.g. unreachable target). */
   confirmed: boolean | null;
   /**
-   * Severidade da propria ferramenta para deteccoes passivas (confirmed
-   * === null) — ex.: risk rating do ZAP baseline. Ausente = incerteza pura
-   * (usado pelos cenarios sinteticos); presente = gradua a evidencia como
-   * SAST/SCA ja fazem por severidade/CVSS, em vez de um valor fixo unico
-   * para "nao confirmado" e "risco alto nao confirmado" ao mesmo tempo.
+   * The tool's own severity for passive detections (confirmed === null) —
+   * e.g. ZAP baseline's risk rating. Absent = pure uncertainty (used by
+   * the synthetic scenarios); present = grades the evidence by
+   * severity/CVSS the way SAST/SCA already do, instead of one fixed value
+   * for both "unconfirmed" and "high-risk but unconfirmed" at once.
    */
   passiveSeverity?: "info" | "low" | "medium" | "high";
 }
 
-/** Contexto de codigo (repositorio/arquivo). */
+/** Code context (repository/file). */
 export interface CodeContextSignal {
   inTestOrFixture: boolean;
   suppressedPreviously: boolean;
   deprecatedModule: boolean;
 }
 
-/** Contexto operacional (ambiente/rota). */
+/** Operational context (environment/route). */
 export interface OpContextSignal {
   maintenanceOrPentestWindow: boolean;
   lowTrafficStaging: boolean;
-  /** VPN/rede interna reduz severidade pratica mesmo com achado tecnico valido. */
+  /** VPN/internal network reduces practical severity even for a technically valid finding. */
   internalOnlyNetwork: boolean;
 }
 
@@ -67,13 +67,13 @@ export interface RawSignal {
   opContext: OpContextSignal;
 }
 
-/** Um evento simulado: um ativo, em um tick de scan, dentro de um cenario. */
+/** A simulated event: one asset, at one scan tick, within a scenario. */
 export interface SimEvent {
   assetId: string;
   scenarioId: string;
   tick: number;
   signal: RawSignal;
-  /** Verdade fundamental definida pelo simulador (nao visivel aos mecanismos). */
+  /** Ground truth defined by the simulator (not visible to the mechanisms). */
   groundTruthVulnerable: boolean;
 }
 

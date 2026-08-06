@@ -1,21 +1,20 @@
-// Nucleo da logica paraconsistente anotada de dois valores (LPA2v).
+// Core of two-valued paraconsistent annotated logic (LPA2v).
 //
-// Para uma proposicao P ("este achado e uma vulnerabilidade real"), um
-// neuronio paraconsistente estima:
-//   mu     (grau de evidencia FAVORAVEL a P)     em [0, 1]
-//   lambda (grau de evidencia DESFAVORAVEL a P)  em [0, 1]
+// For a proposition P ("this finding is a real vulnerability"), a
+// paraconsistent neuron estimates:
+//   mu     (degree of FAVORABLE evidence for P)     in [0, 1]
+//   lambda (degree of UNFAVORABLE evidence for P)   in [0, 1]
 //
-// A partir daí:
-//   GC  = mu - lambda        grau de certeza      em [-1, 1]
-//   GCT = mu + lambda - 1    grau de contradicao   em [-1, 1]
+// From these:
+//   GC  = mu - lambda        certainty degree      in [-1, 1]
+//   GCT = mu + lambda - 1    contradiction degree   in [-1, 1]
 //
-// Ver artigo original (Alexandre de Carvalho, "Cluster Hierarquico de
-// Neuronios Paraconsistentes LPA2v para uma Engine Inteligente de
-// Monitoramento de Redes Industriais", 2026) e da Costa (1974), Abe (2015).
+// Theoretical grounding: da Costa (1974), Abe (2015).
 //
-// A classificacao final em 5 classes (normal/atencao/degradacao/critico/
-// inconsistente) segue a mesma nomenclatura do artigo original, mapeada
-// para triagem de findings de AppSec em vez de telemetria industrial.
+// The final classification uses 5 classes (normal/atencao/degradacao/
+// critico/inconsistente) for AppSec finding triage (SAST/SCA/DAST). The
+// class names stay in Portuguese: they are the vocabulary used throughout
+// this project's article and figures.
 
 import type { ParaClass } from "./types.js";
 
@@ -25,9 +24,9 @@ export interface Evidence {
 }
 
 export interface ParaconsistentThresholds {
-  /** GCT a partir do qual o estado passa a ser "inconsistente", independente de GC. */
+  /** GCT above which the state becomes "inconsistente", regardless of GC. */
   contradiction: number;
-  /** GC minimo para cada nivel ascendente de severidade. */
+  /** Minimum GC for each ascending severity level. */
   attention: number;
   degradation: number;
   critical: number;
@@ -53,9 +52,9 @@ export function contradictionDegree(e: Evidence): number {
 }
 
 /**
- * Combina evidencias de multiplos neuronios (dominios) em uma evidencia
- * agregada, por media ponderada de mu e de lambda — e assim que o neuronio
- * mestre do cluster hierarquico agrega os neuronios especializados.
+ * Combines evidence from multiple neurons (domains) into aggregated
+ * evidence, via weighted mean of mu and of lambda — this is how the master
+ * neuron of the hierarchical cluster aggregates the specialized neurons.
  */
 export function combineEvidence(
   inputs: ReadonlyArray<{ evidence: Evidence; weight: number }>,
@@ -83,23 +82,24 @@ export function classify(
 }
 
 /**
- * Classificacao do cluster hierarquico: usa DUAS evidencias.
+ * Hierarchical cluster classification: uses TWO evidence signals.
  *
- * `aggregated` (media ponderada de mu e de lambda entre os neuronios de
- * dominio) mede o CONSENSO — o quanto os dominios concordam que ha risco
- * real — e decide o ranking normal/atencao/degradacao/critico.
+ * `aggregated` (weighted mean of mu and lambda across domain neurons)
+ * measures CONSENSUS — how much the domains agree there is real risk —
+ * and drives the normal/atencao/degradacao/critico ranking.
  *
- * `contradiction` (o MAIOR mu entre os dominios vs. o MAIOR lambda entre os
- * dominios, possivelmente de dominios diferentes) mede o CONFLITO — se
- * algum dominio afirma risco com forca enquanto outro o refuta com forca.
+ * `contradiction` (the LARGEST mu across domains vs. the LARGEST lambda
+ * across domains, possibly from different domains) measures CONFLICT —
+ * whether some domain strongly asserts risk while another strongly refutes
+ * it.
  *
- * A media ponderada por si so dilui contradicoes reais: se SAST diz "muito
- * favoravel" (mu alto) e DAST diz "muito desfavoravel" (lambda alto), a
- * media de mu e a media de lambda tendem ao centro e o GCT resultante fica
- * baixo — exatamente o oposto do que a logica paraconsistente deveria
- * capturar (preservar as duas evidencias fortes, nao apaga-las na media).
- * Por isso o teste de contradicao usa os extremos entre dominios, nao a
- * media.
+ * The weighted mean alone dilutes real contradictions: if SAST says
+ * "strongly favorable" (high mu) and DAST says "strongly unfavorable"
+ * (high lambda), the mean of mu and the mean of lambda both drift toward
+ * the center and the resulting GCT stays low — the opposite of what
+ * paraconsistent logic should capture (preserving both strong pieces of
+ * evidence, not averaging them away). That's why the contradiction test
+ * uses the extremes across domains, not the mean.
  */
 export function classifyCluster(
   aggregated: Evidence,

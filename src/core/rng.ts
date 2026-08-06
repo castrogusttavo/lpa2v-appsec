@@ -1,5 +1,5 @@
-// PRNG determinístico (mulberry32) — resultados reprodutíveis para validação
-// por terceiros: mesma seed => mesma simulação => mesmos números.
+// Deterministic PRNG (mulberry32) — reproducible results for third-party
+// validation: same seed => same simulation => same numbers.
 
 export type Rng = () => number;
 
