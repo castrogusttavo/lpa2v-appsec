@@ -30,6 +30,23 @@ export interface ParaconsistentThresholds {
   attention: number;
   degradation: number;
   critical: number;
+  /**
+   * Minimum GC for a SINGLE primary detector (SAST/SCA/DAST), on its own,
+   * to force "critico" even when the weighted-mean consensus stays diluted
+   * below that. With 5 roughly-equal-weight domains, one domain alone
+   * structurally caps the aggregated GC around ~0.2 regardless of how
+   * extreme that one domain's own evidence is — so a confirmed, actively
+   * exploited, maximum-severity finding seen by only one tool would never
+   * escalate past "atencao" without this. Deliberately set far above
+   * `critical` (not reused, and not graded like the other levels): this is
+   * an escape hatch for genuinely extreme single-domain evidence, not a
+   * lower bar for ordinary high-severity findings, which should still need
+   * corroboration to reach "critico". Only applies when code/operational
+   * context show no active suppression signal (see `isContextNeutral`) —
+   * otherwise a single strong technical signal could bypass context that's
+   * correctly explaining it away (e.g. a test-fixture finding).
+   */
+  primaryOverride: number;
 }
 
 export const DEFAULT_THRESHOLDS: ParaconsistentThresholds = {
@@ -37,6 +54,7 @@ export const DEFAULT_THRESHOLDS: ParaconsistentThresholds = {
   attention: 0.18,
   degradation: 0.35,
   critical: 0.6,
+  primaryOverride: 0.85,
 };
 
 export function clamp01(x: number): number {
@@ -105,7 +123,14 @@ export function classifyCluster(
   aggregated: Evidence,
   contradiction: Evidence,
   thresholds: ParaconsistentThresholds = DEFAULT_THRESHOLDS,
+  primaryOverride?: { maxCertainty: number; contextNeutral: boolean },
 ): ParaClass {
   if (contradictionDegree(contradiction) >= thresholds.contradiction) return "inconsistente";
+  if (
+    primaryOverride?.contextNeutral &&
+    primaryOverride.maxCertainty >= thresholds.primaryOverride
+  ) {
+    return "critico";
+  }
   return rankByCertainty(certaintyDegree(aggregated), thresholds);
 }

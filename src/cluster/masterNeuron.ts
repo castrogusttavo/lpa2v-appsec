@@ -77,3 +77,34 @@ export function contradictionSignal(breakdown: DomainBreakdown): Evidence {
     lambda: Math.max(...primary.map((v) => v.lambda)),
   };
 }
+
+/**
+ * Highest certainty degree (GC = mu - lambda) reached by any ONE primary
+ * detector on its own — not mu and lambda maxed independently like
+ * `contradictionSignal` (which can mix extremes from different domains).
+ * Used to let a single genuinely extreme finding (e.g. a confirmed,
+ * actively exploited, maximum-severity CVE seen only by SCA) escape the
+ * weighted-mean consensus's structural cap — see `primaryOverride` in
+ * `ParaconsistentThresholds`.
+ */
+export function primaryDomainMaxCertainty(breakdown: DomainBreakdown): number {
+  const primary = [breakdown.sast, breakdown.sca, breakdown.dast];
+  return Math.max(...primary.map((v) => v.mu - v.lambda));
+}
+
+/**
+ * True when code/operational context show no active SUPPRESSION signal —
+ * lambda sitting at its neutral baseline (~0.1) rather than boosted by a
+ * flag (test fixture, maintenance window, deprecated module, internal-only
+ * network). Deliberately checks lambda only, not mu: opContext's mu bump
+ * for public-facing-without-auth is an amplification, not a suppression,
+ * and shouldn't block the override — only a domain actively explaining the
+ * finding away should. The `primaryOverride` escape hatch only applies
+ * when this holds — otherwise a single strong technical signal could
+ * bypass context that's correctly suppressing it (e.g. a test-fixture
+ * finding).
+ */
+export function isContextNeutral(breakdown: DomainBreakdown): boolean {
+  const NEUTRAL_LAMBDA = 0.15; // baseline lambda is 0.1; a little slack for float noise
+  return breakdown.codeContext.lambda <= NEUTRAL_LAMBDA && breakdown.opContext.lambda <= NEUTRAL_LAMBDA;
+}
