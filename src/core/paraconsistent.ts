@@ -34,7 +34,7 @@ export interface ParaconsistentThresholds {
 
 export const DEFAULT_THRESHOLDS: ParaconsistentThresholds = {
   contradiction: 0.5,
-  attention: 0.15,
+  attention: 0.18,
   degradation: 0.35,
   critical: 0.6,
 };

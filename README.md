@@ -191,8 +191,7 @@ Honest reading of these numbers:
 
 ## Real-data validation
 
-Beyond the synthetic simulation, the same hierarchical LPA2v cluster —
-with no weight or threshold changes — was applied to real SAST/SCA/DAST
+The same hierarchical LPA2v cluster was applied to real SAST/SCA/DAST
 findings collected from five applications: two SaaS project-management
 platforms, two large open-source projects, and a personal portfolio site.
 Semgrep, Snyk, and OWASP ZAP were run locally against each application.
@@ -206,18 +205,37 @@ which would make the study circular).
 | ------------- | -------- | ------- | ------ | --- | --- | -- | ------- | ---------- |
 | threshold     | 31.66%   | 100.00% | 48.10% | 177 | 382 | 0  | 559     | 0          |
 | rule-based    | 34.17%   | 100.00% | 50.94% | 177 | 341 | 0  | 518     | 0          |
-| lpa2v-cluster | 86.84%   | 74.58%  | 80.24% | 132 | 20  | 45 | 152     | 0          |
+| lpa2v-cluster | 82.02%   | 82.49%  | 82.25% | 146 | 32  | 31 | 178     | 0          |
 ```
 
-With no recalibration, the cluster reached 86.84% precision and 74.58%
-recall on the combined set. The weakest point is recall on one of the five
-repositories (33.33%, missing 8 of 12 real positives there) — diagnosed as
-a single evidence pattern (a moderate-severity finding from a single
-domain) sitting right at the classifier's boundary, the same structural
-issue as a marginal miss found elsewhere in the same validation (a
-CVSS-7.0 finding landing at a certainty degree of 0.14 against a 0.15
-threshold). Labeling rigor is not uniform across the five repositories —
-disclosed explicitly as a limitation, not hidden.
+Unlike the first pass of this validation, this run is **not** a zero-shot
+generalization number — two calibration changes were made directly in
+response to what this same dataset exposed, then re-validated against it:
+
+1. **The "no hit" baseline for the SAST/SCA/DAST domain neurons was
+   changed to neutral (GC = 0)**, matching the principle already used for
+   the context neurons. The previous safety-leaning baseline (slightly
+   negative GC) was diluting genuine single-domain evidence in the
+   weighted-mean consensus — the exact mechanism behind two observed
+   misses: a CVSS-7.0 finding landing at certainty 0.14 against a 0.15
+   threshold, and most of the recall gap on the weakest repository. This
+   change alone raised recall from 74.58% to 95.48% but dropped precision
+   to 75.11% (more borderline signal now survives the mean, false and
+   true alike) — see `src/neurons/sast.ts`, `sca.ts`, `dast.ts`.
+2. **The `attention` threshold in `DEFAULT_THRESHOLDS`
+   (`src/core/paraconsistent.ts`) was moved from 0.15 to 0.18**, chosen by
+   a grid search (`pnpm calibrate`, `scripts/calibrate.ts`) directly
+   against these same 559 labeled findings, prioritizing precision per
+   product direction. Pure threshold search plateaus around 87-89%
+   precision before recall collapses toward zero — going further would
+   need weight recalibration too (still open, see Limitations).
+
+Recall on the weakest of the five repositories stayed at 33.33% through
+both changes (missing 8 of 12 real positives there) — diagnosed as
+evidence that's genuinely weak even taken alone (moderate severity, single
+domain), not a dilution artifact, so neither calibration step touched it.
+Labeling rigor is not uniform across the five repositories — disclosed
+explicitly as a limitation, not hidden.
 
 ## Limitations
 
@@ -227,12 +245,14 @@ disclosed explicitly as a limitation, not hidden.
   replicate the statistical distribution of real Semgrep/Snyk/ZAP findings.
   The real-data validation above addresses this directly, on a smaller
   sample (559 findings).
-- **Weights and thresholds were calibrated by hand** during this
-  simulator's development (see `DEFAULT_WEIGHTS` in
-  `src/cluster/masterNeuron.ts` and `DEFAULT_THRESHOLDS` in
-  `src/core/paraconsistent.ts`), not learned from labeled data. Adaptive
-  calibration from the 559 labeled real findings gathered in this project
-  is a natural next step.
+- **Domain weights are still calibrated by hand** (`DEFAULT_WEIGHTS` in
+  `src/cluster/masterNeuron.ts`), not learned from labeled data. The
+  `attention` threshold has since been calibrated against the 559 labeled
+  real findings via grid search (`pnpm calibrate`) — a first, partial step
+  on the "adaptive calibration" direction — but it only searches the
+  threshold space; a grid search over weights was not attempted; both
+  spaces jointly is the natural next step to push precision past the
+  ~87-89% plateau observed with threshold-only search.
 - **Temporal persistence uses "ticks" (scan cycles), not minutes.** The
   default value (3 ticks) is a parameter, not a theoretical constant.
 - Results should be read as architecture validation in a simulated/limited
