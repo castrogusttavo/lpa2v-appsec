@@ -4,8 +4,13 @@ import { clamp01, type Evidence } from "../core/paraconsistent.js";
 /** DAST domain neuron (e.g. OWASP ZAP) — evidence from runtime exploitation. */
 export function dastNeuron(signal: DastSignal): Evidence {
   if (!signal.hit) {
-    // DAST only sees what it can reach and test; silence isn't strong proof.
-    return { mu: 0.05, lambda: 0.15 };
+    // Neutral baseline (GC = 0), same principle as codeContextNeuron: DAST
+    // only sees what it can reach and test, so silence isn't strong proof
+    // of safety — and a negative baseline here was diluting genuine
+    // single-domain positives from other domains in the weighted-mean
+    // consensus (see the sharp/CVSS-7.0 near-miss and the Plane recall gap
+    // discussed in the article).
+    return { mu: 0.1, lambda: 0.1 };
   }
 
   if (signal.confirmed === true) {

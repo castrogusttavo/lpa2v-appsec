@@ -18,9 +18,14 @@ const CONFIDENCE_SCALE: Record<SastSignal["confidence"], number> = {
 /** SAST domain neuron (e.g. Semgrep) — evidence from a static match. */
 export function sastNeuron(signal: SastSignal): Evidence {
   if (!signal.hit) {
-    // No match is not strong proof of safety: SAST has limited visibility
-    // (it doesn't see dependencies or runtime behavior).
-    return { mu: 0.03, lambda: 0.15 };
+    // Neutral baseline (GC = 0), same principle as codeContextNeuron: no
+    // match is not strong proof of safety (SAST has limited visibility —
+    // it doesn't see dependencies or runtime behavior), so this domain
+    // shouldn't cast an implicit "safe" vote when it has no evidence. A
+    // negative baseline here was diluting genuine single-domain positives
+    // from SCA/DAST in the weighted-mean consensus (see the sharp/CVSS-7.0
+    // near-miss and the Plane recall gap discussed in the article).
+    return { mu: 0.1, lambda: 0.1 };
   }
 
   let mu = SEVERITY_BASE[signal.severity] * CONFIDENCE_SCALE[signal.confidence];
