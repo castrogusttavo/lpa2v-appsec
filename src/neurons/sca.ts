@@ -4,12 +4,10 @@ import { clamp01, type Evidence } from "../core/paraconsistent.js";
 /** SCA domain neuron (e.g. Snyk) — evidence from a vulnerable dependency. */
 export function scaNeuron(signal: ScaSignal): Evidence {
   if (!signal.hit) {
-    // Neutral baseline (GC = 0), same principle as codeContextNeuron: a
-    // negative baseline here was diluting genuine single-domain positives
-    // from other domains in the weighted-mean consensus (see the
-    // sharp/CVSS-7.0 near-miss and the Plane recall gap discussed in the
-    // article).
-    return { mu: 0.1, lambda: 0.1 };
+    // SCA has near-complete visibility into declared dependencies, so no
+    // match is relatively more reliable evidence of safety than no match
+    // from SAST/DAST.
+    return { mu: 0.03, lambda: 0.2 };
   }
 
   let mu = (signal.cvss ?? 5) / 10;

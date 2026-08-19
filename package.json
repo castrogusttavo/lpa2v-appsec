@@ -8,7 +8,6 @@
   "scripts": {
     "sim": "tsx scripts/run-simulation.ts",
     "triage": "tsx scripts/triage-ci.ts",
-    "calibrate": "tsx scripts/calibrate.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

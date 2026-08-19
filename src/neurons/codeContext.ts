@@ -12,12 +12,7 @@ export function codeContextNeuron(signal: CodeContextSignal): Evidence {
   let mu = 0.1;
   let lambda = 0.1;
 
-  // 0.82, not 0.75: with sast/sca/dast "not hit" now neutral (GC=0) instead
-  // of leaning safe, this suppression alone has to carry the test-fixture
-  // scenario's two simultaneous strong primary-detector positives (SAST +
-  // SCA) below the attention threshold — the small safety-leaning margin
-  // those domains used to contribute is gone.
-  if (signal.inTestOrFixture) lambda += 0.82;
+  if (signal.inTestOrFixture) lambda += 0.75;
   if (signal.suppressedPreviously) lambda += 0.4;
   if (signal.deprecatedModule) lambda += 0.3;
 

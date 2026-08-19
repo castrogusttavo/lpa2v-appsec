@@ -1,13 +1,6 @@
 import type { Asset, RawSignal } from "../core/types.js";
 import { classifyCluster, type ParaconsistentThresholds, DEFAULT_THRESHOLDS } from "../core/paraconsistent.js";
-import {
-  evaluateDomainNeurons,
-  masterNeuron,
-  contradictionSignal,
-  primaryDomainMaxCertainty,
-  isContextNeutral,
-  DEFAULT_WEIGHTS,
-} from "./masterNeuron.js";
+import { evaluateDomainNeurons, masterNeuron, contradictionSignal, DEFAULT_WEIGHTS } from "./masterNeuron.js";
 import { PersistenceTracker } from "./persistence.js";
 import type { ParaClass } from "../core/types.js";
 
@@ -39,11 +32,7 @@ export class Lpa2vCluster {
     const breakdown = evaluateDomainNeurons(signal, asset);
     const aggregated = masterNeuron(breakdown, this.weights);
     const contradiction = contradictionSignal(breakdown);
-    const primaryOverride = {
-      maxCertainty: primaryDomainMaxCertainty(breakdown),
-      contextNeutral: isContextNeutral(breakdown),
-    };
-    const rawClass = classifyCluster(aggregated, contradiction, this.thresholds, primaryOverride);
+    const rawClass = classifyCluster(aggregated, contradiction, this.thresholds);
     return this.tracker.apply(assetId, rawClass);
   }
 }
