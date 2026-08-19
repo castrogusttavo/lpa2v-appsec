@@ -7,3 +7,4 @@ plots/figures/
 __pycache__/
 # achados reais (dados sensiveis/proprietarios de codigo de terceiros) — nunca publicar
 real-data/
+*.pdf
